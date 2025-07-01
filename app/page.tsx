@@ -25,7 +25,6 @@ interface SeriesInfo {
   episodes: Episode[]
 }
 
-import HeroVideoPlayer from "@/components/hero-video-player"
 import ContentCarousel from "@/components/content-carousel"
 import {
   getUILanguage,
@@ -48,6 +47,7 @@ import {
   trackScrollDepth,
   trackMetaScrollDepth,
 } from "@/lib/analytics"
+import HeroVideoPlayer from "@/components/hero-video-player"
 
 export default function HomePage() {
   const searchParams = useSearchParams()
@@ -371,11 +371,10 @@ export default function HomePage() {
                   <button
                     key={language.code}
                     onClick={() => handleLanguageChange(language.code)}
-                    className={`flex items-center space-x-1 px-2 md:px-3 py-1 md:py-1.5 rounded-full transition-all duration-200 text-xs md:text-sm ${
-                      currentLanguage === language.code
-                        ? "bg-blue-600 text-white shadow-lg"
-                        : "text-gray-300 hover:text-white hover:bg-gray-700/50"
-                    }`}
+                    className={`flex items-center space-x-1 px-2 md:px-3 py-1 md:py-1.5 rounded-full transition-all duration-200 text-xs md:text-sm ${currentLanguage === language.code
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                      }`}
                   >
                     <span className="text-sm md:text-base">{language.flag}</span>
                     {language.code !== "default" && (
@@ -445,11 +444,10 @@ export default function HomePage() {
                 <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
-                  className={`flex items-center space-x-1 px-2 md:px-3 py-1 md:py-1.5 rounded-full transition-all duration-200 text-xs md:text-sm ${
-                    currentLanguage === language.code
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
-                  }`}
+                  className={`flex items-center space-x-1 px-2 md:px-3 py-1 md:py-1.5 rounded-full transition-all duration-200 text-xs md:text-sm ${currentLanguage === language.code
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+                    }`}
                 >
                   <span className="text-sm md:text-base">{language.flag}</span>
                   {language.code !== "default" && (
@@ -470,6 +468,7 @@ export default function HomePage() {
       {/* Main Content */}
       <div className="pt-16">
         <div className="-mt-4">
+
           <HeroVideoPlayer
             currentPlayingContent={currentPlayingContent}
             currentSeries={currentSeries}
@@ -487,23 +486,25 @@ export default function HomePage() {
         {/* Content Carousels Section */}
         <div className="px-4 md:px-8 py-4 md:py-6 bg-black">
           <div className="max-w-7xl mx-auto">
-            {Object.entries(carouselSeries).map(
-              ([key, series]) =>
-                series && (
-                  <ContentCarousel
-                    key={key}
-                    title={
-                      typeof series.title === "object"
-                        ? getLocalizedText(series.title, getUILanguage(currentLanguage))
-                        : series.title
-                    }
-                    content={series.episodes}
-                    onPlay={handlePlayContent}
-                    showProgress={false} // Remove progress functionality
-                    currentLanguage={getUILanguage(currentLanguage)}
-                  />
-                ),
-            )}
+            <>
+              {Object.entries(carouselSeries).map(
+                ([key, series]) =>
+                  series && (
+                    <ContentCarousel
+                      key={key}
+                      title={
+                        typeof series.title === "object"
+                          ? getLocalizedText(series.title, getUILanguage(currentLanguage))
+                          : series.title
+                      }
+                      content={series.episodes}
+                      onPlay={handlePlayContent}
+                      showProgress={false} // Remove progress functionality
+                      currentLanguage={getUILanguage(currentLanguage)}
+                    />
+                  ),
+              )}
+            </>
           </div>
         </div>
       </div>

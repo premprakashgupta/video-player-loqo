@@ -708,6 +708,34 @@ export default function HeroVideoPlayer({
       setIsBuffering(false)
     }
 
+    const playAdManually = async (type: 'preroll' | 'midroll' | 'postroll') => {
+      if (!adManager) {
+        console.warn("Ad manager not initialized");
+        return;
+      }
+
+      if (!scheduledAdBreaks || scheduledAdBreaks.length === 0) {
+        console.warn("No scheduled ad breaks found");
+        return;
+      }
+
+      const adBreak = scheduledAdBreaks.find((b) => b.type === type);
+      if (!adBreak) {
+        console.warn(`No ${type} ad break found`);
+        return;
+      }
+
+      try {
+        console.log(`🎬 Manually playing ${type} ad...`);
+        await adManager.playAd(adBreak); // Make sure this returns a Promise
+        console.log(`✅ ${type} ad completed`);
+      } catch (err) {
+        console.error(`❌ Failed to play ${type} ad:`, err);
+      }
+    };
+
+
+
     const handlePlay = () => {
       console.log("🎬 Video play event fired")
       setIsBuffering(false)
@@ -719,7 +747,6 @@ export default function HeroVideoPlayer({
 
         // 🔁 Trigger preroll ad manually if not already playing
         if (adManager && !adManager.isPlayingAd()) {
-
           const prerollAdBreak: AdBreak = {
             id: "manual-preroll",
             timeOffset: 0,
@@ -1377,7 +1404,7 @@ export default function HeroVideoPlayer({
         maxBufferLength: 15,
         maxMaxBufferLength: 60,
         maxBufferSize: 30 * 1000 * 1000,
-        maxBufferHole: 0.5,
+        maxBufferHole: 0.1,
         highBufferWatchdogPeriod: 3,
         nudgeMaxRetry: 3,
         nudgeOffset: 0.1,
