@@ -246,8 +246,8 @@ export default function HeroVideoPlayer({
         const enhancedAdConfig: AdConfig = {
           "adBreaks": [],
           "adTagUrl": "https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast&unviewed_position_start=1&env=vp&impl=s&correlator=1234567890",
-          "enablePreroll": true,
-          "enableMidroll": false,
+          "enablePreroll": false,
+          "enableMidroll": true,
           "enablePostroll": false,
           targeting,
           ppid: AdUtils.generatePPID(),
@@ -286,6 +286,7 @@ export default function HeroVideoPlayer({
           },
           onAdCompleted: (ad) => {
             setAdCountdown(null)
+            setHeroIsPlaying(true)
             setCanSkipAd(false)
             onAdEvent?.("ad_completed", { ad, adBreak: currentAdBreak })
           },
@@ -748,10 +749,10 @@ export default function HeroVideoPlayer({
         // 🔁 Trigger preroll ad manually if not already playing
         if (adManager && !adManager.isPlayingAd()) {
           const prerollAdBreak: AdBreak = {
-            id: "manual-preroll",
+            id: "manual-midroll",
             timeOffset: 0,
             adTagUrl: adManager.getDefaultAdTag(), // or use your custom adTagUrl
-            type: "preroll",
+            type: "midroll",
             mandatory: true,
           }
 
