@@ -7,27 +7,15 @@ import { Play, ChevronLeft, ChevronRight } from "lucide-react"
 import { useRef, useState, useEffect } from "react"
 import { getLocalizedText } from "@/lib/content-data"
 import { getUILanguage, validateContentForPlayback, resolveVideoUrl } from "@/lib/language-utils"
+import { EpisodeContent } from "@/@type/player.type"
 // import { trackContentSelection, trackMetaCarouselScroll, trackCarouselScroll } from "@/lib/analytics"
 
-interface Episode {
-  id: string
-  title: string
-  episodeNumber?: number
-  thumbnail: string
-  duration: string
-  watchProgress?: number
-  description: string
-  videoUrls?: { [key: string]: string } // Added videoUrls property
-  engagement?: {
-    viewsFormatted: string
-    timeAgo: string
-  }
-}
+
 
 interface ContentCarouselProps {
   title: string
-  content: Episode[]
-  onPlay: (content: Episode) => void
+  content: EpisodeContent[]
+  onPlay: (content: EpisodeContent) => void
   showProgress?: boolean
   currentLanguage?: string
   compact?: boolean // Add this new prop
@@ -159,7 +147,7 @@ export default function ContentCarousel({
               <div className="relative">
                 <Image
                   src={item.thumbnail || "/placeholder.svg"}
-                  alt={item.title}
+                  alt={item.title[currentLanguage] || "thumbnail"}
                   width={compact ? (isMobile ? 192 : 240) : isMobile ? 256 : 320}
                   height={compact ? (isMobile ? 108 : 135) : isMobile ? 144 : 180}
                   className={`w-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300 ${compact
@@ -193,7 +181,7 @@ export default function ContentCarousel({
                   {item.duration}
                 </div>
 
-                {/* Episode Number Badge */}
+                {/* EpisodeContent Number Badge */}
                 {item.episodeNumber && (
                   <div
                     className={`absolute top-2 left-2 bg-red-600 text-white font-bold rounded ${isMobile ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-1"

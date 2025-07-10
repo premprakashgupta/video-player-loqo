@@ -121,7 +121,7 @@ export function useAdManager({
 
                 // ✅ Resume main content playback
                 if (videoRef.current?.pause) {
-                    videoRef.current.pause();
+                    videoRef.current.play();
                 }
 
 

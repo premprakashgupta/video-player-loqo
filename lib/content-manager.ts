@@ -1,6 +1,7 @@
 // Centralized content management system
 // UPDATED: Treat "default" as a separate independent language
 
+import { EpisodeContent, SeriesInfo } from "@/@type/player.type"
 import {
   seriesData,
   latestReleases,
@@ -13,30 +14,12 @@ import {
 import { validateContentForPlayback, hasVideoInLanguage } from "@/lib/language-utils"
 
 // Type definitions
-export interface Episode {
-  id: string
-  videoId: string
-  title: string
-  episodeNumber: number
-  thumbnail: string
-  videoUrls: {
-    [key: string]: string
-  }
-  description: string
-  duration: string
-  watchProgress?: number
-  availableLanguages?: string[]
-}
 
-export interface SeriesInfo {
-  id: string
-  title: string
-  episodes: Episode[]
-  type: "series" | "collection"
-}
+
+
 
 export interface ContentSearchResult {
-  content: Episode
+  content: EpisodeContent
   series: SeriesInfo | null
   type: "series" | "standalone"
 }
@@ -55,7 +38,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["english"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
     {
       id: "popular-stories",
@@ -68,7 +51,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
             episodeNumber: index + 1,
             videoUrls: item.videoQualityUrls || {},
             availableLanguages: item.availableLanguages || ["english"],
-          })) as Episode[],
+          })) as EpisodeContent[],
     },
   ],
   hindi: [
@@ -81,7 +64,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["hindi"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
     {
       id: "popular-stories",
@@ -92,7 +75,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["hindi"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
     {
       id: "latest-releases",
@@ -103,7 +86,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["hindi"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
   ],
   default: [
@@ -116,7 +99,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["default"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
     {
       id: "default-popular-stories",
@@ -127,7 +110,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["default"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
     {
       id: "default-latest-releases",
@@ -138,7 +121,7 @@ const LANGUAGE_SPECIFIC_COLLECTIONS = {
           episodeNumber: index + 1,
           videoUrls: item.videoQualityUrls || {},
           availableLanguages: item.availableLanguages || ["default"],
-        })) as Episode[],
+        })) as EpisodeContent[],
     },
   ],
 } as const
@@ -216,6 +199,7 @@ export const parseVideoId = (videoId: string): { collectionId: string; contentId
  * Find content by video ID across all language collections (supports both new and legacy formats)
  */
 export const findContentByVideoId = (videoId: string, language = "hindi"): ContentSearchResult | null => {
+  console.log("videoId----------------", videoId, language)
   // Try new format first
   const parsed = parseVideoId(videoId)
   if (parsed) {
@@ -334,7 +318,7 @@ export const findContentById = (contentId: string): ContentSearchResult | null =
 /**
  * Get next episode in a series/collection
  */
-export const getNextEpisode = (currentEpisodeId: string, seriesId: string, language = "hindi"): Episode | null => {
+export const getNextEpisode = (currentEpisodeId: string, seriesId: string, language = "hindi"): EpisodeContent | null => {
   const seriesInfo = getSeriesById(seriesId, language)
   if (!seriesInfo) return null
 
@@ -350,7 +334,7 @@ export const getNextEpisode = (currentEpisodeId: string, seriesId: string, langu
 /**
  * Get previous episode in a series/collection
  */
-export const getPreviousEpisode = (currentEpisodeId: string, seriesId: string, language = "hindi"): Episode | null => {
+export const getPreviousEpisode = (currentEpisodeId: string, seriesId: string, language = "hindi"): EpisodeContent | null => {
   const seriesInfo = getSeriesById(seriesId, language)
   if (!seriesInfo) return null
 
@@ -404,7 +388,7 @@ export const getCarouselSeries = (language: string) => {
   const languageCollections =
     LANGUAGE_SPECIFIC_COLLECTIONS[language as keyof typeof LANGUAGE_SPECIFIC_COLLECTIONS] || []
 
-  const result = {} as any
+  const result = {} as Record<string, SeriesInfo>
 
   // Add language-specific collections
   languageCollections.forEach((collection) => {
@@ -416,13 +400,15 @@ export const getCarouselSeries = (language: string) => {
     }
   })
 
+  console.log(result)
+
   return result
 }
 
 /**
  * UPDATED: Get default content for initial load - treat "default" as its own language
  */
-export const getDefaultContent = (language?: string): { content: Episode; seriesId: string } | null => {
+export const getDefaultContent = (language?: string): { content: EpisodeContent; seriesId: string } | null => {
   // If no language specified, default to "hindi"
   const targetLanguage = language || "hindi"
 
@@ -508,7 +494,7 @@ export const getDefaultContent = (language?: string): { content: Episode; series
 /**
  * Validate content has required properties
  */
-export const validateContent = (content: any): content is Episode => {
+export const validateContent = (content: any): content is EpisodeContent => {
   const validation = validateContentForPlayback(content)
   return validation.isValid && validation.hasVideo
 }
@@ -519,7 +505,7 @@ export const validateContent = (content: any): content is Episode => {
 export const registerContentCollection = (
   id: string,
   type: "series" | "collection",
-  dataProvider: () => { title: string; episodes: Episode[] },
+  dataProvider: () => { title: string; episodes: EpisodeContent[] },
 ) => {
   // This would be used for dynamic content registration in the future
   console.log(`Registering content collection: ${id}`)
