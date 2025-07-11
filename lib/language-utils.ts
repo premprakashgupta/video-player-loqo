@@ -621,3 +621,26 @@ export const validateQualityForDevice = (
 export const filterQualitiesForDevice = (qualities: string[]): string[] => {
   return qualities
 }
+
+/**
+ * Get localized text with fallback
+ */
+export const getLocalizedText = (
+  textObj: { [key: string]: string },
+  language: string,
+  fallbackLanguage: string = "default"
+): string => {
+  if (textObj[language]) {
+    return textObj[language];
+  }
+  if (textObj[fallbackLanguage]) {
+    return textObj[fallbackLanguage];
+  }
+  // Return the first available language if no specific match is found
+  const availableLanguages = Object.keys(textObj);
+  if (availableLanguages.length > 0) {
+    return textObj[availableLanguages[0]];
+  }
+  return ""; // Return empty string if no text is available
+};
+

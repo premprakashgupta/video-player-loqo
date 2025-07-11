@@ -1,0 +1,20 @@
+/lib
+|-- content/
+|   |-- hindi/
+|   |   |-- _index.ts         # Lists all series available in Hindi
+|   |   |-- standalone.ts     # All standalone episodes for Hindi
+|   |   \-- series/
+|   |       |-- tulsi-ka-safar.ts
+|   |       \-- ram-katha.ts
+|   |
+|   |-- english/
+|   |   |-- _index.ts         # Lists all series available in English
+|   |   |-- standalone.ts     # All standalone episodes for English
+|   |   \-- series/
+|   |       \-- journey-of-tulsi.ts
+|   |
+|   \-- _index.ts             # The main index, lists all available languages
+|
+|-- content-data.ts      (This file will be removed)
+|-- content-manager.ts   (This file will be updated to use the new structure)
+...

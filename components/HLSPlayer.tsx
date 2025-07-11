@@ -9,7 +9,6 @@ import { EpisodeContent } from "@/@type/player.type"
 import { Button } from "./ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { Slider } from "./ui/slider"
-import { getLocalizedText } from "@/lib/content-data"
 import { getUILanguage } from "@/lib/language-utils"
 import EnhancedLikeButton from "./enhanced-like-button"
 import { trackFullscreenToggle, trackMetaFullscreenToggle, trackMetaShareClick, trackMetaVideoSeek, trackShareClick, trackVideoSeek } from "@/lib/analytics"
@@ -27,6 +26,14 @@ interface VideoPlayerProps {
     currentLanguage: string;
     isIOS: boolean,
     isMobile: boolean
+}
+
+function getLocalizedText(textObj: any, language: string, fallback = "english") {
+  if (typeof textObj === "string") return textObj
+  if (typeof textObj === "object" && textObj !== null) {
+    return textObj[language] || textObj[fallback] || Object.values(textObj)[0] || ""
+  }
+  return ""
 }
 
 
@@ -88,7 +95,7 @@ const HLSPlayer: React.FC<VideoPlayerProps> = ({ content, onNext, onPrev, curren
         hlsRef.current = hls;
         console.log(currentLanguage)
         console.log("content.videoUrls: --- ", content)
-        const url = content.videoUrls[currentLanguage] ? content.videoUrls[currentLanguage][currentQuality.label] : content.videoUrls['hindi'][currentQuality.label];
+        const url = content.videoUrls[currentQuality.label];
         console.log("url: --- ", url)
         if (Hls.isSupported()) {
             hls.loadSource(url);
@@ -691,14 +698,12 @@ const HLSPlayer: React.FC<VideoPlayerProps> = ({ content, onNext, onPrev, curren
                                 {isFullscreen && !isMobile && (
                                     <div className="text-white text-sm mr-4">
                                         <div className="font-semibold">
-                                            {content?.title
-                                                ? getLocalizedText(content.title, getUILanguage(currentLanguage))
-                                                : getLocalizedText(content.title, getUILanguage(currentLanguage))}
+                                            {getLocalizedText(content.title, getUILanguage(currentLanguage))}
                                         </div>
                                         <div className="text-gray-300 text-xs">
                                             {content.episodeNumber
                                                 ? `Episode ${content.episodeNumber}`
-                                                : getLocalizedText(content.description, getUILanguage(currentLanguage))}
+                                                : content.description}
                                         </div>
                                     </div>
                                 )}
@@ -734,7 +739,7 @@ const HLSPlayer: React.FC<VideoPlayerProps> = ({ content, onNext, onPrev, curren
             <div className={`px-4 md:px-8 py-2 md:py-3 bg-black ${isTheaterMode ? "max-w-4xl mx-auto" : ""}`}>
                 <div className="max-w-6xl mx-auto">
                     <h1 className="text-lg md:text-2xl font-bold mb-0 text-white">
-                        {getLocalizedText(content.title, getUILanguage(currentLanguage))}
+                        {content.title}
                     </h1>
 
                     {/* In the Video Info Section, replace the engagement metrics div: */}
@@ -748,7 +753,7 @@ const HLSPlayer: React.FC<VideoPlayerProps> = ({ content, onNext, onPrev, curren
                                 likeCount={content.engagement?.likesFormatted || "0"}
                                 size="md"
                                 contentId={content.id}
-                                contentName={getLocalizedText(content.title, getUILanguage(currentLanguage))}
+                                contentName={content.title}
                                 onLike={() => {
                                     // Add any like tracking logic here
                                     console.log("Video liked!")

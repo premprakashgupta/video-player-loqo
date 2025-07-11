@@ -7,7 +7,6 @@ import Image from "next/image";
 import { EpisodeContent } from "@/@type/player.type";
 import ContentCarousel from "@/components/content-carousel";
 import HLSPlayer from "@/components/HLSPlayer";
-import { getLocalizedText } from "@/lib/content-data";
 import { findContentByVideoId, getCarouselSeries, getDefaultContent } from "@/lib/content-manager";
 import {
   getAvailableLanguages,
@@ -15,6 +14,7 @@ import {
   logContentAccess,
   logLanguageSwitch,
   validateContentForPlayback,
+  getLocalizedText,
 } from "@/lib/language-utils";
 import { isMalformedVideoId } from "@/lib/utils";
 import { trackContentSelection, trackMetaScrollDepth, trackPageView, trackScrollDepth } from "@/lib/analytics";
@@ -28,7 +28,7 @@ export default function Home() {
   const [videoPlayOffset, setVideoPlayOffset] = useState(0)
   const [isIOS, setIsIOS] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [currentLanguage, setCurrentLanguage] = useState("hindi");
+  const [currentLanguage, setCurrentLanguage] = useState("hi");
   const [carouselSeries, setCarouselSeries] = useState(() => getCarouselSeries("hindi"));
   const [currVideo, setCurrVideo] = useState<EpisodeContent | null>(
     null
@@ -67,12 +67,8 @@ export default function Home() {
       }
     }
 
-    // ✅ URL params are missing or malformed
     const skip = isMalformedVideoId(videoId);
-    console.log("skip: --", skip)
     if (skip) {
-      console.log("Skipping malformed or empty videoId");
-
       setCurrentLanguage("hindi");
       const fallback = getDefaultContent("hindi");
       if (fallback) {
@@ -85,18 +81,13 @@ export default function Home() {
       return;
     }
 
-    // ✅ Set current language from URL
     setCurrentLanguage(videoLanguage);
 
-    // ✅ Try to load valid video
     const result = findContentByVideoId(videoId!, videoLanguage);
-    console.log(result)
     if (result) {
       setCurrVideo(result.content);
       setCurrSeries(result.series?.id || "standalone");
     } else {
-      console.warn("Video not found, using fallback");
-
       const fallback = getDefaultContent(videoLanguage);
       if (fallback) {
         setCurrVideo(fallback.content);
@@ -183,54 +174,69 @@ export default function Home() {
     [currentLanguage]
   );
 
-  const handlePlayContent = useCallback((episode: EpisodeContent) => {
-    // Log user intent
-    logContentAccess(episode, currentLanguage, "handlePlayContent");
+  const handlePlayContent = useCallback(
+    (episode: EpisodeContent) => {
+      logContentAccess(episode, currentLanguage, "handlePlayContent");
 
-    // Validation before playing
-    const validation = validateContentForPlayback(episode);
-    if (!validation.isValid || !validation.hasVideo) {
-      console.warn("Invalid episode:", validation.issues);
-      return;
-    }
+      const validation = validateContentForPlayback(episode);
+      if (!validation.isValid || !validation.hasVideo) {
+        console.warn("Invalid episode:", validation.issues);
+        return;
+      }
 
-    // Track click
-    trackContentSelection(episode.id, episode.title[currentLanguage], "carousel");
+      trackContentSelection(
+        episode.id,
+        episode.title,
+        "carousel"
+      );
 
-    // Smooth scroll + temporary programmatic scroll lock
-    setIsProgrammaticScroll(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => setIsProgrammaticScroll(false), 1000);
+      setIsProgrammaticScroll(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setIsProgrammaticScroll(false), 1000);
 
-    // Ensure the episode is fully resolved from the content store
-    const found = findContentByVideoId(episode.videoId, currentLanguage) ||
-      findContentByVideoId(episode.id, currentLanguage);
+      const found = findContentByVideoId(episode.videoId, currentLanguage);
 
-    if (found) {
-      setCurrSeries(found.series?.id || "standalone");
-      setCurrVideo(found.content);
-    } else {
-      console.log("Fallback: setting raw episode");
-      setCurrSeries("standalone");
-      setCurrVideo(episode); // direct fallback
-    }
-  }, [currentLanguage]);
-
+      if (found) {
+        setCurrSeries(found.series?.id || "standalone");
+        setCurrVideo(found.content);
+      } else {
+        setCurrSeries("standalone");
+        setCurrVideo(episode);
+      }
+    },
+    [currentLanguage]
+  );
 
   const handleNext = () => {
-    const episodes = carouselSeries["ram-katha"].episodes;
-    const index = episodes.findIndex((ep: EpisodeContent) => ep.id === currVideo?.id);
-    if (index < episodes.length - 1) setCurrVideo(episodes[index + 1]);
-    else console.log("Episode end");
+    const series = carouselSeries[currSeries];
+    if (!series) return;
+    const index = series.episodes.findIndex(
+      (ep: EpisodeContent) => ep.id === currVideo?.id
+    );
+    if (index < series.episodes.length - 1) {
+      setCurrVideo(series.episodes[index + 1]);
+    }
   };
 
   const handlePrev = () => {
-    const episodes = carouselSeries["ram-katha"].episodes;
-    const index = episodes.findIndex((ep: EpisodeContent) => ep.id === currVideo?.id);
-    if (index > 0) setCurrVideo(episodes[index - 1]);
-    else console.log("Episode start");
+    const series = carouselSeries[currSeries];
+    if (!series) return;
+    const index = series.episodes.findIndex(
+      (ep: EpisodeContent) => ep.id === currVideo?.id
+    );
+    if (index > 0) {
+      setCurrVideo(series.episodes[index - 1]);
+    }
   };
 
+  useEffect(() => {
+    console.log(
+
+      Object.entries(carouselSeries)
+    )
+  }, [carouselSeries])
+
+  return <></>
   return (
     <div className="min-h-screen bg-black p-6 text-white">
       {/* Header */}
@@ -290,14 +296,11 @@ export default function Home() {
       {/* Carousels */}
       <div className="px-4 md:px-8 py-6">
         <div className="max-w-7xl mx-auto">
+
           {Object.entries(carouselSeries).map(([key, series]) => (
             <ContentCarousel
               key={key}
-              title={
-                typeof series.title === "object"
-                  ? getLocalizedText(series.title, getUILanguage(currentLanguage))
-                  : series.title
-              }
+              title={series.title}
               content={series.episodes}
               onPlay={handlePlayContent}
               showProgress={false}

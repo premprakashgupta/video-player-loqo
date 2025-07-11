@@ -3,13 +3,10 @@ type VideoQuality = "480p" | "720p" | "1080p" | "4K";
 export interface EpisodeContent {
     id: string;
     videoId: string;
-    title: Record<string, string>; // language code to title
+    title: string;
     episodeNumber: number;
     thumbnail: string;
-    videoQualityUrls: {
-        [language: string]: Record<VideoQuality, string>;
-    };
-    description: Record<string, string>;
+    description: string;
     duration: string; // e.g., "3:21"
     availableLanguages: string[];
     baseViews: number;
@@ -22,9 +19,7 @@ export interface EpisodeContent {
         viewsFormatted: string;
         likesFormatted: string;
     };
-    videoUrls: {
-        [language: string]: Record<VideoQuality, string>;
-    };
+    videoUrls: Record<VideoQuality, string>;
 }
 
 export interface SeriesInfo {
